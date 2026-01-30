@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflix</title>
+    <style>
+        /* --- CSS Variables & Reset --- */
+        :root {
+            --primary-red: #e50914;
+            --background-black: #141414;
+            --text-white: #ffffff;
+            --text-gray: #b3b3b3;
+            --modal-bg: #181818;
+            --input-bg: #333;
+            --bg-movie-grid: url('https://z-cdn-media.chatglm.cn/files/c9da54c1-b6ac-45da-9400-0a4cfb4b1537.jpg?auth_key=1869782998-37688cf5f28e49e49c6159b8cfe72986-0-76eecfb783cd5b8767e8afa53a4cc718');
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--background-black);
+            color: var(--text-white);
+            overflow-x: hidden;
+        }
+
+        /* ==============================
+           AUTH / SIGN IN PAGE STYLES
+           ============================== */
+        #auth-view {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(to top, rgba(0,0,0,0.8) 0, rgba(0,0,0,0) 60%, rgba(0,0,0,0.8) 100%), 
+                              var(--bg-movie-grid); 
+            background-size: cover; background-position: center;
+            display: flex; justify-content: center; align-items: center; z-index: 2000;
+        }
+
+        .auth-container {
+            background-color: rgba(0, 0, 0, 0.75);
+            padding: 60px 68px 40px; border-radius: 4px;
+            width: 100%; max-width: 450px; min-height: 500px;
+        }
+
+        .auth-logo {
+            font-size: 32px; color: var(--primary-red); font-weight: bold;
+            margin-bottom: 30px; text-decoration: none; display: inline-block;
+        }
+
+        .auth-form .form-group { margin-bottom: 16px; }
+        .auth-form input {
+            width: 100%; padding: 16px 20px; border-radius: 4px; border: none;
+            background: var(--input-bg); color: white; font-size: 1rem;
+        }
+        .auth-form input:focus { outline: 2px solid #777; outline-offset: 2px; }
+
+        .auth-btn {
+            width: 100%; padding: 16px; background-color: var(--primary-red);
+            color: white; border: none; border-radius: 4px; font-size: 1rem;
+            font-weight: bold; cursor: pointer; margin-top: 24px; transition: background 0.2s;
+        }
+        .auth-btn:hover { background-color: #c11119; }
+
+        .form-help {
+            display: flex; justify-content: space-between; color: #b3b3b3;
+            font-size: 13px; margin-top: 10px;
+        }
+        .auth-new { margin-top: 40px; color: #737373; font-size: 16px; }
+        
+        .auth-signup-btn {
+            color: white; text-decoration: none; font-weight: bold; cursor: pointer;
+            background: none; border: none; font-size: 16px;
+        }
+        .auth-signup-btn:hover { text-decoration: underline; }
+
+        .hidden { display: none !important; }
+
+        /* ==============================
+           MAIN APP / BROWSE STYLES
+           ============================== */
+
+        /* Navigation Bar */
+        .nav {
+            position: fixed; top: 0; width: 100%; padding: 20px 4%;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; transition: background-color 0.4s ease-in;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7) 10%, rgba(0,0,0,0));
+        }
+        .nav.active { background-color: var(--background-black); }
+
+        .nav__logo {
+            font-size: 28px; color: var(--primary-red); font-weight: bold;
+            text-decoration: none; letter-spacing: 1px; text-transform: uppercase; margin-right: 25px;
+        }
+
+        .nav__links { display: flex; gap: 20px; list-style: none; align-items: center; }
+        .nav__links li a {
+            color: var(--text-white); text-decoration: none; font-size: 14px;
+            transition: color 0.3s; white-space: nowrap; cursor: pointer;
+        }
+        .nav__links li a.active { font-weight: bold; color: white; }
+        .nav__links li a:hover { color: var(--text-gray); }
+
+        .nav__secondary { display: flex; align-items: center; gap: 15px; }
+        
+        .nav__btn-signup {
+            background-color: var(--primary-red);
+            color: white; padding: 7px 17px; border-radius: 4px;
+            text-decoration: none; font-weight: bold; font-size: 14px;
+            transition: background 0.2s; cursor: pointer; border: none;
+        }
+        .nav__btn-signup:hover { background-color: #c11119; }
+
+        .nav__avatar { width: 32px; height: 32px; border-radius: 4px; cursor: pointer; }
+        .sign-in-text { font-size: 14px; color: white; cursor: pointer; text-decoration: none; }
+
+        /* Hero Section */
+        .hero {
+            position: relative; height: 80vh; width: 100%;
+            display: flex; align-items: center;
+            background-image: var(--bg-movie-grid);
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .hero__video-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; overflow: hidden;
+        }
+        .hero__video { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
+        
+        .hero__overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(180deg, rgba(20,20,20,0.3) 0%, rgba(20,20,20,0.2) 60%, rgba(20,20,20,1) 100%),
+                        linear-gradient(90deg, rgba(20,20,20,0.8) 0%, rgba(20,20,20,0) 50%);
+            z-index: 0;
+        }
+        
+        .hero__content { padding-left: 4%; z-index: 10; max-width: 600px; margin-top: 60px; }
+        .hero__title { font-size: 3rem; font-weight: 800; margin-bottom: 15px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .hero__description {
+            font-size: 1.2rem; line-height: 1.5; margin-bottom: 25px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            display: -webkit-box;-webkit-box-orient: vertical; overflow: hidden;
+        }
+        .hero__buttons { display: flex; gap: 15px; }
+        .btn {
+            border: none; padding: 10px 24px; border-radius: 4px; font-size: 1.1rem;
+            font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.8; }
+        .btn--play { background-color: white; color: black; }
+        .btn--more { background-color: rgba(109, 109, 110, 0.7); color: white; }
+
+        /* Content Rows */
+        .row { 
+            margin-left: 4%; 
+            margin-bottom: 40px; 
+            position: relative; 
+            padding: 0 4%; 
+        }
+        .row__title { font-size: 1.4rem; font-weight: 600; margin-bottom: 15px; color: #e5e5e5; margin-left: -4%; }
+        
+        .row__posters-wrapper {
+            position: relative;
+        }
+        .row__posters-container {
+            display: flex; overflow-y: hidden; overflow-x: scroll; padding: 20px 0;
+            scroll-behavior: smooth;
+        }
+        .row__posters-container::-webkit-scrollbar { display: none; }
+        .row__posters-container { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .row__poster {
+            width: 200px; max-height: 120px; object-fit: cover; margin-right: 10px;
+            border-radius: 4px; transition: transform 450ms; cursor: pointer; flex: 0 0 auto;
+        }
+        
+        /* UPDATED: Large Poster Tag (Increased Size) */
+        .row__posterLarge { height: 350px; width: 240px; max-height: unset; }
+        
+        .row__poster:hover { transform: scale(1.05); opacity: 1; z-index: 100; }
+
+        /* Scroll Buttons */
+        .slider-arrow {
+            position: absolute; top: 0; bottom: 0;
+            width: 50px; height: 100%;
+            background: rgba(0,0,0,0.5);
+            color: white; border: none;
+            z-index: 100; cursor: pointer;
+            opacity: 0; transition: opacity 0.3s ease, background 0.3s;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem;
+            padding-left: 5px;
+        }
+        .slider-arrow:hover { background: rgba(0,0,0,0.7); opacity: 1 !important; }
+        .slider-arrow.right { right: 0; border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
+        .slider-arrow.left { left: -4%; border-top-right-radius: 4px; border-bottom-right-radius: 4px; }
+
+        .row:hover .slider-arrow { opacity: 1; }
+        @media(max-width: 768px) { 
+            .slider-arrow { display: none; } 
+            .nav__links { display: none; } 
+            .row { padding: 0; }
+            .row__title { margin-left: 0; }
+        }
+
+        /* Footer */
+        .footer { max-width: 980px; margin: 20px auto 0; padding: 30px 4%; color: grey; }
+        .footer__links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; font-size: 13px; margin-bottom: 20px; }
+        .footer__link { color: grey; text-decoration: none; }
+        .footer__link:hover { text-decoration: underline; }
+        .footer__copyright { font-size: 11px; margin-top: 20px; }
+
+        /* Modal (Popup) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); z-index: 3000;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden; transition: all 0.3s ease;
+        }
+        .modal-overlay.open { opacity: 1; visibility: visible; }
+        .modal-content {
+            background-color: var(--modal-bg); width: 90%; max-width: 900px;
+            border-radius: 8px; overflow: hidden; position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            transform: scale(0.8); transition: transform 0.3s ease;
+        }
+        .modal-overlay.open .modal-content { transform: scale(1); }
+        
+        .modal-header { position: relative; height: 450px; background: black; }
+        .modal-img {
+            width: 100%; height: 100%; object-fit: cover; opacity: 0.6;
+        }
+        .modal-close-btn {
+            position: absolute; top: 15px; right: 15px; background: #181818;
+            border: none; color: white; border-radius: 50%; width: 36px; height: 36px;
+            font-size: 20px; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; z-index: 20;
+        }
+        
+        /* Standard Video Player */
+        .modal-video-player {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; z-index: 10;
+        }
+
+        /* YouTube Iframe Player */
+        .modal-iframe-player {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border: none; z-index: 10;
+            display: none; /* Hidden by default */
+        }
+
+        .modal-body { padding: 20px 30px 30px; position: relative; z-index: 5; margin-top: -50px; }
+        .modal-title { font-size: 2.5rem; font-weight: bold; margin-bottom: 10px; }
+        .modal-meta { display: flex; gap: 15px; color: #bcbcbc; font-size: 0.9rem; margin-bottom: 20px; align-items: center;}
+        .match-score { color: #46d369; font-weight: bold; }
+        .modal-desc { font-size: 1.1rem; line-height: 1.6; color: white; margin-bottom: 20px;}
+
+        .modal-actions { display: flex; gap: 15px; margin-top: 10px; }
+        .play-btn-large {
+            background: white; color: black; border: none; padding: 10px 30px;
+            font-size: 1.1rem; font-weight: bold; border-radius: 4px; cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: white; color: black; padding: 12px 24px; border-radius: 4px;
+            font-weight: bold; z-index: 4000; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            opacity: 0; transition: opacity 0.5s; pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
+
+    </style>
+</head>
+<body>
+
+    <!-- VIEW 1: SIGN IN PAGE -->
+    <div id="auth-view">
+        <div class="auth-container">
+            <h1 class="auth-logo">NETFLIX</h1>
+            <form class="auth-form" id="loginForm" onsubmit="handleLogin(event)">
+                <h3 style="margin-bottom: 25px; font-weight: normal;">Sign In</h3>
+                <div class="form-group">
+                    <input type="email" placeholder="Email or phone number" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="auth-btn" id="loginBtn">Sign In</button>
+                <div class="form-help">
+                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                        <input type="checkbox" checked> Remember me
+                    </label>
+                    <a href="#">Need help?</a>
+                </div>
+                <div class="auth-new">
+                    New to Netflix? <button class="auth-signup-btn" onclick="showToast('Sign up flow coming soon!')">Sign up now</button>.
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- VIEW 2: MAIN APP -->
+    <div id="app-view" class="hidden">
+        <!-- Navigation -->
+        <header class="nav" id="nav">
+            <div style="display: flex; align-items: center;">
+                <a href="#" class="nav__logo">NETFLIX</a>
+                <ul class="nav__links">
+                    <li><a href="#" class="nav-link active" onclick="scrollToSection('home', this)">Home</a></li>
+                    <li><a href="#" class="nav-link" onclick="scrollToSection('tvshows', this)">TV Shows</a></li>
+                    <li><a href="#" class="nav-link" onclick="scrollToSection('movies', this)">Movies</a></li>
+                    <li><a href="popular movies.html" class="nav-link" onclick="scrollToSection('movies', this)">New & Popular</a></li>
+                </ul>
+            </div>
+            <div class="nav__secondary">
+                <button class="nav__btn-signup" onclick="showAuth()">Sign Up</button>
+                <a href="#" class="sign-in-text" onclick="showAuth()">Sign In</a>
+                <div class="nav__avatar" onclick="showAuth()">
+                    <img src="https://ui-avatars.com/api/?name=User&background=random" alt="User" style="width:100%; height:100%; border-radius:4px;">
+                </div>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero" id="home-section">
+            <div class="hero__video-container">
+                <video class="hero__video" autoplay muted loop playsinline poster="https://picsum.photos/seed/poster/1920/1080">
+                    <source src="https://videos.pexels.com/video-files/3121459/3121459-uhd_2560_1440_25fps.mp4" type="video/mp4">
+                </video>
+            </div>
+            <div class="hero__overlay"></div>
+            
+            <div class="hero__content">
+                <h1 class="hero__title">The Horizon</h1>
+                <p class="hero__description">
+                    In a world where technology and nature collide, one explorer must find the balance between the digital future and the ancient past.
+                </p>
+                <div class="hero__buttons">
+                    <button class="btn btn--play" onclick="playVideo()">
+                        <span>▶</span> Play
+                    </button>
+                    <button class="btn btn--more" onclick="openModal('The Horizon', 'https://picsum.photos/seed/heroimg/600/350', 'https://videos.pexels.com/video-files/3121459/3121459-uhd_2560_1440_25fps.mp4', '8.8 Match', 'In a world where technology and nature collide, one explorer must find the balance.')">
+                        <span>ℹ</span> More Info
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Trending Section -->
+            <section class="row">
+                <h3 class="row__title">Trending Now</h3>
+                <div class="row__posters-wrapper">
+                    <!-- UPDATED: Scroll amount changed to -700 for bigger images -->
+                    <button class="slider-arrow left" onclick="handleScroll(this, -700)">&#8249;</button>
+                    <div class="row__posters-container">
+                        <!-- UPDATED: Added 'row__posterLarge' class -->
+                        <img class="row__poster row__posterLarge" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqE1LNGjwoWRqAjo2Wv2JYTeLxO-tRn-Ayeg&s">
+                        <img class="row__poster row__posterLarge" src="https://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/hari-hara-veera-mallu--part-1-sword-vs-spirit-et00308207-1751530343.jpg">
+                        <img class="row__poster row__posterLarge" src="https://static.toiimg.com/photo/msid-120960223/120960223.jpg?35986">
+                        <img class="row__poster row__posterLarge" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSDSORDEupJYoBRn9qju_SJSqYRT-ffzhmRwA&s">
+                        <img class="row__poster row__posterLarge" src="https://i.ytimg.com/vi/AvqmkDS04Hk/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLAXmu_Bi1CzEtpDtHG88UcD0WMRiw">
+                    </div>
+                    <!-- UPDATED: Scroll amount changed to 700 -->
+                    <button class="slider-arrow right" onclick="handleScroll(this, 700)">&#8250;</button>
+                </div>
+            </section>
+
+            <!-- Telugu Hits Section -->
+            <section class="row" id="tvshows-section">
+                <h3 class="row__title">Telugu Super Hits</h3>
+                <div class="row__posters-wrapper">
+                    <!-- UPDATED: Scroll amount changed to -700 -->
+                    <button class="slider-arrow left" onclick="handleScroll(this, -700)">&#8249;</button>
+                    
+                    <div class="row__posters-container">
+                        
+                        <!-- JERSEY -->
+                        <img class="row__poster row__posterLarge" 
+                             src="https://upload.wikimedia.org/wikipedia/en/6/62/Jersey_soundtrack.jpg"
+                             onclick="openModal('Jersey (2019)', 'https://upload.wikimedia.org/wikipedia/en/6/62/Jersey_soundtrack.jpg', 'https://www.youtube.com/embed/qky1I3a2e0Q', '98% Match', 'A failed cricketer decides to revive his career in his late 30s to fulfill his son\'s wish.')">
+            
+                        <!-- ORANGE -->
+                        <img class="row__poster row__posterLarge" 
+                             src="https://upload.wikimedia.org/wikipedia/en/f/ff/Orange_Telugu_Soundtrack_Disc_Cover.jpg"
+                             alt="Orange" 
+                             onclick="openModal('Orange', 'https://upload.wikimedia.org/wikipedia/en/f/ff/Orange_Telugu_Soundtrack_Disc_Cover.jpg', 'https://www.youtube.com/embed/kKsk-ReaHfw', '94% Match', 'A romantic drama about a guy who doesn\'t believe in love.')">
+                        
+                        <!-- ARYA 2 -->
+                        <img class="row__poster row__posterLarge" 
+                             src="https://sund-images.sunnxt.com/9999/640x360_Arya2_9999_ae6f7676-ffbb-49ea-84fe-8a38b478f8eb.jpg"
+                             alt="Arya 2"
+                             onclick="openModal('Arya 2', 'https://sund-images.sunnxt.com/9999/640x360_Arya2_9999_ae6f7676-ffbb-49ea-84fe-8a38b478f8eb.jpg', 'https://www.youtube.com/embed/BKbpwgTCLnY', '96% Match', 'A complex love triangle with a twist of obsession.')">
+                        
+                        <!-- PUSHPA -->
+                        <img class="row__poster row__posterLarge" 
+                             src="https://i.pinimg.com/736x/86/2d/97/862d973886fa8f816066485df506eee2.jpg"
+                             alt="Pushpa"
+                             onclick="openModal('Pushpa: The Rise', 'https://i.pinimg.com/736x/86/2d/97/862d973886fa8f816066485df506eee2.jpg', 'https://www.youtube.com/embed/Q1NKMPhP8PY', '99% Match', 'A laborer rises through the ranks of a red sandalwood smuggling syndicate.')">
+                        
+                        <!-- FAMILY STAR -->
+                        <img class="row__poster row__posterLarge" 
+                             src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTMnOB-VbFBPZl2eLnVxVLC1OycKEJmtJoP-A&s" 
+                             alt="Family Star"
+                             onclick="openModal('Family Star', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTMnOB-VbFBPZl2eLnVxVLC1OycKEJmtJoP-A&s', 'https://www.youtube.com/embed/0nWuRw770TI', '89% Match', 'A family drama with high emotions.')">
+                        
+                        <!-- BUSINESS MAN -->
+                        <img class="row__poster row__posterLarge" 
+                             src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQdM77vRcduN8LlBFhC80aJZk0zkihEbARQ-g&s" 
+                             alt="Business Man"
+                             onclick="openModal('Business Man', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQdM77vRcduN8LlBFhC80aJZk0zkihEbARQ-g&s', 'https://www.youtube.com/embed/WX5NCPAuPco', '91% Match', 'A ruthless man arrives in Mumbai to conquer the underworld.')">
+                    </div>
+
+                    <!-- UPDATED: Scroll amount changed to 700 -->
+                    <button class="slider-arrow right" onclick="handleScroll(this, 700)">&#8250;</button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer__links">
+                <a href="#" class="footer__link">Audio Description</a>
+                <a href="#" class="footer__link">Help Center</a>
+                <a href="#" class="footer__link">Gift Cards</a>
+                <a href="#" class="footer__link">Media Center</a>
+            </div>
+            <div class="footer__copyright">&copy; 2023-2024 Netflix Clone Inc.</div>
+        </footer>
+
+        <!-- Modal with Video/iframe Player -->
+        <div class="modal-overlay" id="movieModal" onclick="closeModal(event)">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <button class="modal-close-btn" onclick="closeModalDirect()">×</button>
+                
+                <div class="modal-header">
+                    <!-- 1. YouTube Iframe (Hidden by default) -->
+                    <iframe id="modalIframe" class="modal-iframe-player" 
+                            src="" 
+                            title="YouTube video player" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            allowfullscreen>
+                    </iframe>
+
+                    <!-- 2. Standard Video Player (For MP4s) -->
+                    <video id="modalVideo" class="modal-video-player" controls autoplay loop style="display:none;"></video>
+                    
+                    <!-- 3. Static Image (Fallback) -->
+                    <img src="" alt="Movie Art" class="modal-img" id="modalImg">
+                </div>
+                
+                <div class="modal-body">
+                    <h2 class="modal-title" id="modalTitle">Title</h2>
+                    <div class="modal-meta">
+                        <span class="match-score" id="modalMatch">98% Match</span>
+                        <span>2023</span>
+                        <span style="border: 1px solid #777; padding: 0 4px; font-size: 10px;">HD</span>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="play-btn-large" onclick="playTrailer()">
+                            ▶ Play
+                        </button>
+                    </div>
+
+                    <p class="modal-desc" id="modalDesc" style="margin-top:20px;">Description goes here...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast">Message</div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        const authView = document.getElementById('auth-view');
+        const appView = document.getElementById('app-view');
+        
+        function showAuth() {
+            appView.classList.add('hidden');
+            authView.classList.remove('hidden');
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            if(document.querySelector('.nav-links li:first-child a')) {
+                document.querySelector('.nav-links li:first-child a').classList.add('active');
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const originalText = btn.innerText;
+            btn.innerText = "Signing In...";
+            btn.style.opacity = "0.7";
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.opacity = "1";
+                authView.classList.add('hidden');
+                appView.classList.remove('hidden');
+                showToast("Welcome back! Signed in successfully.");
+            }, 1500);
+        }
+
+        function scrollToSection(section, element) {
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            if(element) element.classList.add('active');
+
+            if (section === 'home') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (section === 'tvshows' || section === 'movies') {
+                const target = document.getElementById('tvshows-section');
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    showToast("Loading Telugu Hits...");
+                }
+            }
+        }
+
+        const nav = document.getElementById('nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) { nav.classList.add('active'); } 
+            else { nav.classList.remove('active'); }
+        });
+
+        function handleScroll(btn, scrollAmount) {
+            const container = btn.parentElement.querySelector('.row__posters-container');
+            if (container) {
+                container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            }
+        }
+
+        const modal = document.getElementById('movieModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalImg = document.getElementById('modalImg');
+        const modalMatch = document.getElementById('modalMatch');
+        const modalDesc = document.getElementById('modalDesc');
+        const modalVideo = document.getElementById('modalVideo');
+        const modalIframe = document.getElementById('modalIframe'); // Get iframe
+        let currentVideoUrl = "";
+
+        function openModal(title, imgSrc, videoSrc, match, description) {
+            modalTitle.innerText = title;
+            modalImg.src = imgSrc;
+            modalMatch.innerText = match;
+            modalDesc.innerText = description;
+            
+            // Reset all media
+            modalVideo.style.display = 'none';
+            modalIframe.style.display = 'none';
+            modalImg.style.display = 'block';
+            modalVideo.pause();
+            modalIframe.src = ""; // Stop any existing iframe video
+
+            currentVideoUrl = videoSrc || "";
+
+            // Check if it's a YouTube video
+            if (currentVideoUrl && currentVideoUrl.includes('youtube')) {
+                // Hide Image, Show Iframe
+                modalImg.style.display = 'none';
+                modalIframe.style.display = 'block';
+                // Add autoplay parameters
+                modalIframe.src = currentVideoUrl + "?autoplay=1&mute=1"; 
+            } else if (currentVideoUrl) {
+                // Standard MP4 logic
+                modalVideo.src = currentVideoUrl;
+                // Don't auto play immediately unless user clicks play, or play muted
+            }
+            
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function playTrailer() {
+            if (currentVideoUrl) {
+                if (currentVideoUrl.includes('youtube')) {
+                    // YouTube handles play via src parameters, but if user clicked play:
+                    // we can ensure it's visible
+                    modalImg.style.display = 'none';
+                    modalIframe.style.display = 'block';
+                    modalIframe.src = currentVideoUrl + "?autoplay=1";
+                    showToast("Playing trailer...");
+                } else {
+                    modalImg.style.display = 'none';
+                    modalVideo.style.display = 'block';
+                    modalVideo.play();
+                    showToast("Playing trailer...");
+                }
+            } else {
+                showToast("No trailer available for this title.");
+            }
+        }
+
+        function closeModal(event) {
+            if (event.target === modal) { closeModalDirect(); }
+        }
+
+        function closeModalDirect() {
+            modal.classList.remove('open');
+            document.body.style.overflow = 'auto';
+            
+            // Stop video
+            modalVideo.pause();
+            modalVideo.style.display = 'none';
+            
+            // Stop YouTube (clear src)
+            modalIframe.src = "";
+            modalIframe.style.display = 'none';
+            
+            modalImg.style.display = 'block';
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        function playVideo() { showToast("Starting main feature..."); }
+    </script>
+</body>
+</html>

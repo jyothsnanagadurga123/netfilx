@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Inline CSS Media Example</title>
+</head>
+
+<body style="margin:0; padding:20px; font-family:Arial; background:#f2f2f2;">
+
+  <h2 style="text-align:center; color:#333;">
+    Image & Video Gallery (Inline CSS)
+  </h2>
+
+  <div style="
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));
+    gap:15px;
+    max-width:1000px;
+    margin:auto;
+  ">
+
+    <!-- Image paths (3) -->
+    <img src="https://m.media-amazon.com/images/M/MV5BMTZkMjBjNWMtZGI5OC00MGU0LTk4ZTItODg2NWM3NTVmNWQ4XkEyXkFqcGc@._V1_.jpg" width="300" height="350"
+         alt="Image 1"
+         style="width:100%; border-radius:8px; box-shadow:0 4px 8px rgba(0,0,0,0.2);" />
+
+    <img src="https://pbs.twimg.com/media/G5JOMzobUAA_XqZ.jpg " width="300" height="350"
+         alt="Image 2"
+         style="width:100%; border-radius:8px; box-shadow:0 4px 8px rgba(0,0,0,0.2);" />
+
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqE1LNGjwoWRqAjo2Wv2JYTeLxO-tRn-Ayeg&s" width="300" height="350"
+         alt="Image 3"
+         style="width:100%; border-radius:8px; box-shadow:0 4px 8px rgba(0,0,0,0.2);" />
+<img src="https://assets.gadgets360cdn.com/pricee/assets/product/202509/Little_Hearts_p1_1756798433.jpg" width="300" height="350"
+         alt="Image 4"
+         style="width:100%; border-radius:8px; box-shadow:0 4px 8px rgba(0,0,0,0.2);" />
+<img src="https://sund-images.sunnxt.com/9999/640x360_Arya2_9999_ae6f7676-ffbb-49ea-84fe-8a38b478f8eb.jpg" width="300" height="350"
+         alt="Image 5"
+         style="width:100%; border-radius:8px; box-shadow:0 4px 8px rgba(0,0,0,0.2);" />
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsejXi-xZz3vunWWZUGPztW_22VzH3D0ksNw&s" width="300" height="350"
+         alt="Image 6"
+         style="width:100%; border-radius:8px; box-shadow:0 4px 8px rgba(0,0,0,0.2);" />
+
+  <!-- JavaScript -->
+  <script>
+    const mediaElements = document.querySelectorAll("img, video");
+
+    mediaElements.forEach((media, index) => {
+      media.addEventListener("loadeddata", () => {
+        console.log("Media loaded:", index + 1);
+      });
+    });
+  </script>
+
+</body>
+</html>
